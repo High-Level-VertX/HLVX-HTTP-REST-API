@@ -2,6 +2,10 @@ package com.github.hlvx.rest.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Bean used to convert {@link com.github.hlvx.rest.exceptions.HTTPException} to a valid REST JSON response
+ * @author AlexMog
+ */
 public class ErrorBean {
 	private int code;
 	private String error;

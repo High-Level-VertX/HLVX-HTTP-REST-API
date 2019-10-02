@@ -26,6 +26,10 @@ import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 import java.util.Set;
 
+/**
+ * Create and configure a REST HTTP server
+ * @author AlexMog
+ */
 public class RestHTTPServer implements Closeable {
     private static final Logger logger = LoggerFactory.getLogger(RestHTTPServer.class);
     private Router router;
@@ -96,6 +100,11 @@ public class RestHTTPServer implements Closeable {
         router = builder.build();
     }
 
+    /**
+     * Start the server on a specific port
+     * @param port The port to start the server on
+     * @param handler The handler to listen on the start
+     */
     public void start(int port, Handler<AsyncResult<HttpServer>> handler) {
         logger.info("Starting REST HTTP server on port {}", port);
         httpServer = Vertx.vertx().createHttpServer()
@@ -162,6 +171,9 @@ public class RestHTTPServer implements Closeable {
         return corsConfig;
     }
 
+    /**
+     * Basic configuration for Cors
+     */
     public static class CorsConfig {
         private String allowedOriginPattern;
         private boolean allowCredentials;

@@ -2,6 +2,10 @@ package com.github.hlvx.rest.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Basic REST-Style Error
+ * @author AlexMog
+ */
 public class HTTPException extends RuntimeException {
 	private static final long serialVersionUID = 5107806786982269082L;
 	private int code;
