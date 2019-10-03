@@ -55,9 +55,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <mariadb-driver-version>2.4.4</mariadb-driver-version>
         <rest-vertx-version>0.8.9</rest-vertx-version>
+        <jupiter-api-version>5.5.0</jupiter-api-version>
+        <jupiter-engine-runner>5.5.0</jupiter-engine-runner>
+        <jupiter-vintage-version>5.5.0</jupiter-vintage-version>
+        <vertx-version>3.8.1</vertx-version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-client</artifactId>
+            <version>${vertx-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-junit5</artifactId>
+            <version>${vertx-version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.zandero</groupId>
             <artifactId>rest.vertx</artifactId>
@@ -67,6 +82,24 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.8.0-alpha0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${jupiter-api-version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${jupiter-engine-runner}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <version>${jupiter-vintage-version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>

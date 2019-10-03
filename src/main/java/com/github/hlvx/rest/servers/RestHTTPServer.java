@@ -48,6 +48,7 @@ public class RestHTTPServer implements Closeable {
             router.route().handler(context -> {
                 authenticationProvider.authorize(context, userResponse -> {
                     if (userResponse.succeeded()) context.setUser(userResponse.result());
+                    else throw new RuntimeException(userResponse.cause());
                     context.next();
                 });
             });
@@ -75,7 +76,7 @@ public class RestHTTPServer implements Closeable {
             .errorHandler(new ExceptionHandler<Throwable>() {
                 @Override
                 public void write(Throwable result, HttpServerRequest request, HttpServerResponse response) {
-                    response.putHeader("Content-Type", "application/json");
+                    response.putHeader("Content-Type", "application/json;charset=UTF-8");
                     ErrorBean bean;
                     if (result instanceof HTTPException) {
                         HTTPException ex = (HTTPException) result;
@@ -106,6 +107,7 @@ public class RestHTTPServer implements Closeable {
      * @param handler The handler to listen on the start
      */
     public void start(int port, Handler<AsyncResult<HttpServer>> handler) {
+        init();
         logger.info("Starting REST HTTP server on port {}", port);
         httpServer = Vertx.vertx().createHttpServer()
                 .requestHandler(router)
