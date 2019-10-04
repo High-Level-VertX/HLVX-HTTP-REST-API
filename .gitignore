@@ -2,6 +2,7 @@
 .idea
 *.iml
 .vertx
+/file-uploads
 
 # Compiled class file
 *.class
