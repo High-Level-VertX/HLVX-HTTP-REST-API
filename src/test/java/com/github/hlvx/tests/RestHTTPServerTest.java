@@ -48,7 +48,7 @@ public class RestHTTPServerTest {
 
         client = WebClient.create(vertx);
 
-        httpServer = new RestHTTPServer();
+        httpServer = new RestHTTPServer(vertx);
         httpServer
             .setServices(new TestService(), new TestService2())
             .setAuthenticationProvider((context, handler) -> {

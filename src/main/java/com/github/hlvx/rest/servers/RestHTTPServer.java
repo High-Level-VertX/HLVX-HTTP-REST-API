@@ -40,9 +40,14 @@ public class RestHTTPServer implements Closeable {
     private AuthProvider authenticationProvider;
     private Validator validateWith;
     private CorsConfig corsConfig;
+    private final Vertx vertx;
+
+    public RestHTTPServer(Vertx vertx) {
+        this.vertx = vertx;
+    }
 
     private void init() {
-        router = Router.router(Vertx.vertx());
+        router = Router.router(vertx);
 
         if (authenticationProvider != null) {
             router.route().handler(context -> {
@@ -109,7 +114,7 @@ public class RestHTTPServer implements Closeable {
     public void start(int port, Handler<AsyncResult<HttpServer>> handler) {
         init();
         logger.info("Starting REST HTTP server on port {}", port);
-        httpServer = Vertx.vertx().createHttpServer()
+        httpServer = vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(port, handler);
     }
