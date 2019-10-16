@@ -61,11 +61,21 @@ public class RestHTTPServer implements Closeable {
         }
 
         router.errorHandler(500, ctx -> {
-            logger.error("Internal error catched", ctx.failure());
-            ctx.response()
-                    .setStatusCode(500)
-                    .setStatusMessage("HTTP 500 Internal Server Error")
-                    .end(Json.encode(new ErrorBean(500, "Internal Server Error")));
+            if (ctx.failure() instanceof HTTPException) {
+                HTTPException ex = (HTTPException) ctx.failure();
+                ctx.response()
+                        .setStatusCode(ex.getCode())
+                        .putHeader("Content-Type", "application/json;charset=UTF-8")
+                        .setStatusMessage("HTTP " + ex.getCode() + " " + ex.getMessage())
+                        .end(Json.encode(new ErrorBean(ex.getCode(), ex.getMessage())));
+            } else {
+                logger.error("Internal error catched", ctx.failure());
+                ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json;charset=UTF-8")
+                        .setStatusMessage("HTTP 500 Internal Server Error")
+                        .end(Json.encode(new ErrorBean(500, "Internal Server Error")));
+            }
         });
 
         RestBuilder builder = new RestBuilder(router);
@@ -87,9 +97,8 @@ public class RestHTTPServer implements Closeable {
                     if (result instanceof HTTPException) {
                         HTTPException ex = (HTTPException) result;
                         response.setStatusCode(ex.getCode());
-                        response.setStatusMessage(ex.getMessage());
-                        bean = new ErrorBean(ex.getCode(),
-                                "HTTP " + ex.getCode() + " " + ex.getMessage());
+                        response.setStatusMessage("HTTP " + ex.getCode() + " " + ex.getMessage());
+                        bean = new ErrorBean(ex.getCode(), ex.getMessage());
                     } else if (result instanceof ExecuteException) {
                         ExecuteException ex = (ExecuteException) result;
                         response.setStatusCode(ex.getStatusCode());
