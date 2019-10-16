@@ -53,7 +53,8 @@ public class RestHTTPServer implements Closeable {
             router.route().handler(context -> {
                 authenticationProvider.authorize(context, userResponse -> {
                     if (userResponse.succeeded()) context.setUser(userResponse.result());
-                    else throw new RuntimeException(userResponse.cause());
+                    else if (userResponse.cause() instanceof HTTPException) throw (HTTPException) userResponse.cause();
+					else throw new RuntimeException(userResponse.cause());
                     context.next();
                 });
             });
