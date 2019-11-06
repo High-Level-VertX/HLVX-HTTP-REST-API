@@ -3,12 +3,17 @@ package com.github.hlvx.rest.servers;
 import com.github.hlvx.rest.authentication.AuthProvider;
 import com.github.hlvx.rest.beans.ErrorBean;
 import com.github.hlvx.rest.exceptions.HTTPException;
+import com.github.hlvx.rest.resources.SwaggerResource;
 import com.zandero.rest.RestBuilder;
 import com.zandero.rest.RestRouter;
 import com.zandero.rest.context.ContextProvider;
 import com.zandero.rest.exception.ExceptionHandler;
 import com.zandero.rest.exception.ExecuteException;
 import com.zandero.rest.injection.InjectionProvider;
+import io.swagger.v3.jaxrs2.Reader;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Closeable;
 import io.vertx.core.Handler;
@@ -24,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -40,30 +46,66 @@ public class RestHTTPServer implements Closeable {
     private AuthProvider authenticationProvider;
     private Validator validateWith;
     private CorsConfig corsConfig;
+    private final Vertx vertx;
+    private Info openAPIInfo;
+
+    public RestHTTPServer(Vertx vertx) {
+        this.vertx = vertx;
+    }
+
+    public RestHTTPServer withSwagger(Info swaggerInfo) {
+        openAPIInfo = swaggerInfo;
+        return this;
+    }
 
     private void init() {
-        router = Router.router(Vertx.vertx());
+        router = Router.router(vertx);
 
         if (authenticationProvider != null) {
             router.route().handler(context -> {
                 authenticationProvider.authorize(context, userResponse -> {
                     if (userResponse.succeeded()) context.setUser(userResponse.result());
-                    else throw new RuntimeException(userResponse.cause());
+                    else if (userResponse.cause() instanceof HTTPException) throw (HTTPException) userResponse.cause();
+					else throw new RuntimeException(userResponse.cause());
                     context.next();
                 });
             });
         }
 
         router.errorHandler(500, ctx -> {
-            logger.error("Internal error catched", ctx.failure());
-            ctx.response()
-                    .setStatusCode(500)
-                    .setStatusMessage("HTTP 500 Internal Server Error")
-                    .end(Json.encode(new ErrorBean(500, "Internal Server Error")));
+            if (ctx.failure() instanceof HTTPException) {
+                HTTPException ex = (HTTPException) ctx.failure();
+                ctx.response()
+                        .setStatusCode(ex.getCode())
+                        .putHeader("Content-Type", "application/json;charset=UTF-8")
+                        .setStatusMessage("HTTP " + ex.getCode() + " " + ex.getMessage())
+                        .end(Json.encode(new ErrorBean(ex.getCode(), ex.getMessage())));
+            } else {
+                logger.error("Internal error catched", ctx.failure());
+                ctx.response()
+                        .setStatusCode(500)
+                        .putHeader("Content-Type", "application/json;charset=UTF-8")
+                        .setStatusMessage("HTTP 500 Internal Server Error")
+                        .end(Json.encode(new ErrorBean(500, "Internal Server Error")));
+            }
         });
 
         RestBuilder builder = new RestBuilder(router);
-        for (Object service : services) builder.register(service);
+
+        Set<Class<?>> servicesSet = new HashSet<>();
+        for (Object service : services) {
+            builder.register(service);
+            servicesSet.add(service.getClass());
+        }
+
+        if (openAPIInfo != null) {
+            OpenAPI openAPI = new OpenAPI();
+            openAPI.info(openAPIInfo);
+            builder.register(
+                    new SwaggerResource(new Reader(openAPI).read(servicesSet)));
+        }
+
+
         if (providers != null)
             for (ContextProvider<?> provider : providers) builder.addProvider(provider);
         if (injectWith != null) builder.injectWith(injectWith);
@@ -81,9 +123,8 @@ public class RestHTTPServer implements Closeable {
                     if (result instanceof HTTPException) {
                         HTTPException ex = (HTTPException) result;
                         response.setStatusCode(ex.getCode());
-                        response.setStatusMessage(ex.getMessage());
-                        bean = new ErrorBean(ex.getCode(),
-                                "HTTP " + ex.getCode() + " " + ex.getMessage());
+                        response.setStatusMessage("HTTP " + ex.getCode() + " " + ex.getMessage());
+                        bean = new ErrorBean(ex.getCode(), ex.getMessage());
                     } else if (result instanceof ExecuteException) {
                         ExecuteException ex = (ExecuteException) result;
                         response.setStatusCode(ex.getStatusCode());
@@ -109,7 +150,7 @@ public class RestHTTPServer implements Closeable {
     public void start(int port, Handler<AsyncResult<HttpServer>> handler) {
         init();
         logger.info("Starting REST HTTP server on port {}", port);
-        httpServer = Vertx.vertx().createHttpServer()
+        httpServer = vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(port, handler);
     }

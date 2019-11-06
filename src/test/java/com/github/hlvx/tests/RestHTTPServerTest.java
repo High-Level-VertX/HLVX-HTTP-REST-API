@@ -3,6 +3,7 @@ package com.github.hlvx.tests;
 import com.github.hlvx.rest.servers.RestHTTPServer;
 import com.zandero.rest.RestRouter;
 import com.zandero.rest.injection.InjectionProvider;
+import io.swagger.v3.oas.models.info.Info;
 import io.vertx.core.*;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -16,14 +17,14 @@ import io.vertx.junit5.VertxTestContext;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import javax.annotation.security.RolesAllowed;
 import javax.validation.Validator;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(VertxExtension.class)
 public class RestHTTPServerTest {
@@ -35,7 +36,7 @@ public class RestHTTPServerTest {
     private static RestHTTPServer httpServer;
 
     @BeforeAll
-    public static void before() {
+    public static void before() throws InterruptedException {
         vertx = Vertx.vertx();
 
         RestRouter.getReaders().clear();
@@ -48,8 +49,9 @@ public class RestHTTPServerTest {
 
         client = WebClient.create(vertx);
 
-        httpServer = new RestHTTPServer();
+        httpServer = new RestHTTPServer(vertx);
         httpServer
+            .withSwagger(new Info())
             .setServices(new TestService(), new TestService2())
             .setAuthenticationProvider((context, handler) -> {
                 String token = context.request().getHeader("token");
