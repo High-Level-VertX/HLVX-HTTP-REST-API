@@ -3,6 +3,7 @@ package com.github.hlvx.tests;
 import com.github.hlvx.rest.servers.RestHTTPServer;
 import com.zandero.rest.RestRouter;
 import com.zandero.rest.injection.InjectionProvider;
+import io.swagger.v3.oas.models.info.Info;
 import io.vertx.core.*;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.JsonObject;
@@ -35,7 +36,7 @@ public class RestHTTPServerTest {
     private static RestHTTPServer httpServer;
 
     @BeforeAll
-    public static void before() {
+    public static void before() throws InterruptedException {
         vertx = Vertx.vertx();
 
         RestRouter.getReaders().clear();
@@ -50,6 +51,7 @@ public class RestHTTPServerTest {
 
         httpServer = new RestHTTPServer(vertx);
         httpServer
+            .withSwagger(new Info())
             .setServices(new TestService(), new TestService2())
             .setAuthenticationProvider((context, handler) -> {
                 String token = context.request().getHeader("token");

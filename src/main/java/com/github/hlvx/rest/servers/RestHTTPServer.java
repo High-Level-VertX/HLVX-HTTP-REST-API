@@ -3,12 +3,17 @@ package com.github.hlvx.rest.servers;
 import com.github.hlvx.rest.authentication.AuthProvider;
 import com.github.hlvx.rest.beans.ErrorBean;
 import com.github.hlvx.rest.exceptions.HTTPException;
+import com.github.hlvx.rest.resources.SwaggerResource;
 import com.zandero.rest.RestBuilder;
 import com.zandero.rest.RestRouter;
 import com.zandero.rest.context.ContextProvider;
 import com.zandero.rest.exception.ExceptionHandler;
 import com.zandero.rest.exception.ExecuteException;
 import com.zandero.rest.injection.InjectionProvider;
+import io.swagger.v3.jaxrs2.Reader;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Closeable;
 import io.vertx.core.Handler;
@@ -24,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -41,9 +47,15 @@ public class RestHTTPServer implements Closeable {
     private Validator validateWith;
     private CorsConfig corsConfig;
     private final Vertx vertx;
+    private Info openAPIInfo;
 
     public RestHTTPServer(Vertx vertx) {
         this.vertx = vertx;
+    }
+
+    public RestHTTPServer withSwagger(Info swaggerInfo) {
+        openAPIInfo = swaggerInfo;
+        return this;
     }
 
     private void init() {
@@ -79,7 +91,21 @@ public class RestHTTPServer implements Closeable {
         });
 
         RestBuilder builder = new RestBuilder(router);
-        for (Object service : services) builder.register(service);
+
+        Set<Class<?>> servicesSet = new HashSet<>();
+        for (Object service : services) {
+            builder.register(service);
+            servicesSet.add(service.getClass());
+        }
+
+        if (openAPIInfo != null) {
+            OpenAPI openAPI = new OpenAPI();
+            openAPI.info(openAPIInfo);
+            builder.register(
+                    new SwaggerResource(new Reader(openAPI).read(servicesSet)));
+        }
+
+
         if (providers != null)
             for (ContextProvider<?> provider : providers) builder.addProvider(provider);
         if (injectWith != null) builder.injectWith(injectWith);

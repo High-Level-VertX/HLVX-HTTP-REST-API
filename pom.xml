@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.hlvx</groupId>
     <artifactId>hlvx-rest</artifactId>
-    <version>0.0.1a-SNAPSHOT</version>
+    <version>0.0.1a-swagger-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>HLVX-Rest</name>
@@ -59,9 +59,15 @@
         <jupiter-engine-runner>5.5.0</jupiter-engine-runner>
         <jupiter-vintage-version>5.5.0</jupiter-vintage-version>
         <vertx-version>3.8.1</vertx-version>
+        <swagger-version>2.0.0</swagger-version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-jaxrs2</artifactId>
+            <version>${swagger-version}</version>
+        </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web-client</artifactId>
