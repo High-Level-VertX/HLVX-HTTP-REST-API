@@ -59,6 +59,7 @@ public class RestHTTPServer implements Closeable {
     }
 
     private void init() {
+        if (router != null) return;
         router = Router.router(vertx);
 
         if (authenticationProvider != null) {
@@ -153,6 +154,11 @@ public class RestHTTPServer implements Closeable {
         httpServer = vertx.createHttpServer()
                 .requestHandler(router)
                 .listen(port, handler);
+    }
+
+    public Router router() {
+        init();
+        return router;
     }
 
     @Override

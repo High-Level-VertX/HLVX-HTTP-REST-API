@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.hlvx</groupId>
     <artifactId>hlvx-rest</artifactId>
-    <version>0.1.0a</version>
+    <version>0.1.1a</version>
     <packaging>jar</packaging>
 
     <name>HLVX-Rest</name>
