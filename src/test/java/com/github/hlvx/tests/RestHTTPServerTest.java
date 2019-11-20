@@ -60,7 +60,7 @@ public class RestHTTPServerTest {
                     else handler.handle(Future.succeededFuture(new TestUser(token)));
                 } else handler.handle(Future.succeededFuture(null));
             })
-            .start(PORT, e -> {});
+           .start(PORT, e -> {});
     }
 
     @Test
