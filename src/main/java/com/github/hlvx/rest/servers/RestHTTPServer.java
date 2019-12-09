@@ -24,6 +24,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,7 @@ public class RestHTTPServer implements Closeable {
     private void init() {
         if (router != null) return;
         router = Router.router(vertx);
+        router.route().handler(BodyHandler.create());
 
         if (authenticationProvider != null) {
             router.route().handler(context -> {
